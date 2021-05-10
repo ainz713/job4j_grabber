@@ -28,7 +28,7 @@ public class PsqlStore implements Store, AutoCloseable {
     }
 
     @Override
-    public void save(Post post) throws SQLException {
+    public void save(Post post) {
         try (PreparedStatement statement =
                      cnn.prepareStatement("insert into post(name, text, link, created) values (?, ?, ?, ?)",
                              Statement.RETURN_GENERATED_KEYS)) {
@@ -42,6 +42,8 @@ public class PsqlStore implements Store, AutoCloseable {
                     post.setId(generatedKeys.getInt(1));
                 }
             }
+        } catch (SQLException e) {
+            e.printStackTrace();
         }
     }
 
@@ -67,7 +69,7 @@ public class PsqlStore implements Store, AutoCloseable {
     }
 
     @Override
-    public Post findById(String id) throws SQLException {
+    public Post findById(String id) {
         Post post = new Post();
         try (PreparedStatement statement =
                      cnn.prepareStatement("select * from post where id = ?")) {
@@ -83,6 +85,8 @@ public class PsqlStore implements Store, AutoCloseable {
                     ));
                 }
             }
+        } catch (SQLException e) {
+            e.printStackTrace();
         }
         return post.getId() > 0 ? post : null;
     }
@@ -94,10 +98,12 @@ public class PsqlStore implements Store, AutoCloseable {
         }
     }
 
-    public static void main(String[] args) throws IOException, SQLException {
+    public static void main(String[] args) {
         Properties config = new Properties();
         try (InputStream in = PsqlStore.class.getClassLoader().getResourceAsStream("rabbit.properties")) {
             config.load(in);
+        } catch (IOException e) {
+            e.printStackTrace();
         }
 
         SqlRuParse sqlRuParse = new SqlRuParse();
@@ -121,7 +127,7 @@ public class PsqlStore implements Store, AutoCloseable {
             for (int i = 0; i < posts.size(); i++) {
                 System.out.println(posts.get(i).getName());
             }
-        } catch (IOException e) {
+        } catch (SQLException | IOException e) {
             e.printStackTrace();
         }
     }
